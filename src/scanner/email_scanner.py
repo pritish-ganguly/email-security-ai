@@ -15,17 +15,9 @@ def get_value(email_data, field, default=""):
 
 
 def build_email_text(email_data):
-    subject = str(
-        get_value(email_data, "subject", "") or ""
-    )
-
-    body = str(
-        get_value(email_data, "body", "") or ""
-    )
-
-    html_body = str(
-        get_value(email_data, "html_body", "") or ""
-    )
+    subject = str(get_value(email_data, "subject", "") or "")
+    body = str(get_value(email_data, "body", "") or "")
+    html_body = str(get_value(email_data, "html_body", "") or "")
 
     return (
         f"Subject: {subject}\n\n"
@@ -35,7 +27,6 @@ def build_email_text(email_data):
 
 
 class EmailScanner:
-
     def __init__(self, predictor=None):
         self.predictor = predictor or EmailPredictor()
 
@@ -53,7 +44,6 @@ class EmailScanner:
             )
 
         email_data = parse_email(email_path)
-
         email_text = build_email_text(email_data)
 
         if not email_text.strip():
@@ -61,22 +51,17 @@ class EmailScanner:
                 "The email does not contain usable text."
             )
 
-        ml_result = self.predictor.predict(
-            email_text
-        )
+        ml_result = self.predictor.predict(email_text)
 
         subject = str(
             get_value(email_data, "subject", "") or ""
         )
-
         body = str(
             get_value(email_data, "body", "") or ""
         )
-
         html_body = str(
             get_value(email_data, "html_body", "") or ""
         )
-
         attachments = get_value(
             email_data,
             "attachments",
@@ -104,22 +89,10 @@ class EmailScanner:
         return {
             "email": {
                 "file": str(email_path),
-                "sender": get_value(
-                    email_data,
-                    "sender",
-                    "",
-                ),
-                "receiver": get_value(
-                    email_data,
-                    "receiver",
-                    "",
-                ),
+                "sender": get_value(email_data, "sender", ""),
+                "receiver": get_value(email_data, "receiver", ""),
                 "subject": subject,
-                "date": get_value(
-                    email_data,
-                    "date",
-                    "",
-                ),
+                "date": get_value(email_data, "date", ""),
                 "attachments": attachments,
             },
             "ml_result": ml_result,
@@ -130,8 +103,6 @@ class EmailScanner:
 
 
 def scan_email(email_path, predictor=None):
-    scanner = EmailScanner(
+    return EmailScanner(
         predictor=predictor
-    )
-
-    return scanner.scan(email_path)
+    ).scan(email_path)

@@ -15,11 +15,12 @@ Pipeline:
         ↓
     Risk assessment
         ↓
-    Decision engine
+    Decision Engine V3.1
         ↓
     Final security decision
 """
 
+from dataclasses import asdict, is_dataclass
 from pathlib import Path
 
 from src.data.email_parser import parse_email
@@ -35,15 +36,14 @@ from src.security.risk_engine import (
     print_risk_assessment,
 )
 
-from src.security.decision_engine import (
-    make_decision,
-    print_decision,
+from src.security.decision_engine_v31 import (
+    make_decision_v31,
 )
 
 
 SAMPLE_EMAIL = Path(
-    "data/raw/spamassassin/easy_ham/"
-    "0001.ea7e79d3153e7469e7a9c3e0af6a357e"
+    "data/raw/spamassassin/spam/"
+    "0000.7b1b73cf36cf9dbc3d64e3f2ee2b91f1"
 )
 
 
@@ -63,6 +63,36 @@ def _get_email_value(
         email_data,
         field,
         default,
+    )
+
+
+def _to_dict(
+    value: object,
+) -> dict:
+    """
+    Convert dataclass/object results into dictionaries.
+
+    Decision Engine V3.1 expects dictionary inputs.
+    """
+
+    if isinstance(value, dict):
+        return value
+
+    if is_dataclass(value):
+        return asdict(value)
+
+    if hasattr(value, "to_dict"):
+        result = value.to_dict()
+
+        if isinstance(result, dict):
+            return result
+
+    if hasattr(value, "__dict__"):
+        return vars(value)
+
+    raise TypeError(
+        f"Cannot convert {type(value).__name__} "
+        "to dictionary."
     )
 
 
@@ -142,6 +172,10 @@ def main() -> None:
         email_text
     )
 
+    ml_result = _to_dict(
+        ml_result
+    )
+
     subject = str(
         _get_email_value(
             email_data,
@@ -175,6 +209,10 @@ def main() -> None:
         [],
     )
 
+    # ----------------------------------------------------------
+    # SECURITY ANALYSIS
+    # ----------------------------------------------------------
+
     print(
         "Running security analysis..."
     )
@@ -186,6 +224,15 @@ def main() -> None:
         attachments=attachments,
     )
 
+    # Keep original object for reporting.
+    security_analysis_dict = _to_dict(
+        security_analysis
+    )
+
+    # ----------------------------------------------------------
+    # RISK ASSESSMENT
+    # ----------------------------------------------------------
+
     print(
         "Running risk assessment..."
     )
@@ -195,15 +242,32 @@ def main() -> None:
         security_analysis=security_analysis,
     )
 
-    print(
-        "Running decision engine..."
+    # Keep original object for reporting.
+    risk_assessment_dict = _to_dict(
+        risk_assessment
     )
 
-    decision = make_decision(
-        ml_result=ml_result,
-        security_analysis=security_analysis,
-        risk_assessment=risk_assessment,
+    # ----------------------------------------------------------
+    # DECISION ENGINE V3.1
+    # ----------------------------------------------------------
+
+    print(
+        "Running Decision Engine V3.1..."
     )
+
+    decision = make_decision_v31(
+        ml_result=ml_result,
+        security_analysis=security_analysis_dict,
+        risk_assessment=risk_assessment_dict,
+    )
+
+    decision = _to_dict(
+        decision
+    )
+
+    # ----------------------------------------------------------
+    # ML RESULT VALUES
+    # ----------------------------------------------------------
 
     prediction = ml_result.get(
         "label",
@@ -236,6 +300,10 @@ def main() -> None:
             0.0,
         )
     )
+
+    # ----------------------------------------------------------
+    # REPORT
+    # ----------------------------------------------------------
 
     print("\n" + "=" * 70)
     print(
@@ -276,6 +344,10 @@ def main() -> None:
         f"  {attachments}"
     )
 
+    # ----------------------------------------------------------
+    # MACHINE LEARNING RESULT
+    # ----------------------------------------------------------
+
     print("\n" + "-" * 70)
     print(
         "MACHINE LEARNING RESULT"
@@ -298,17 +370,68 @@ def main() -> None:
         f"Threshold  : {threshold:.4f}"
     )
 
+    # ----------------------------------------------------------
+    # SECURITY ANALYSIS
+    # ----------------------------------------------------------
+
     print_security_analysis(
         security_analysis
     )
+
+    # ----------------------------------------------------------
+    # RISK ASSESSMENT
+    # ----------------------------------------------------------
 
     print_risk_assessment(
         risk_assessment
     )
 
-    print_decision(
-        decision
+    # ----------------------------------------------------------
+    # DECISION ENGINE V3.1
+    # ----------------------------------------------------------
+
+    print("\n" + "-" * 70)
+    print(
+        "DECISION ENGINE V3.1"
     )
+    print("-" * 70)
+
+    print(
+        f"\nClassification : "
+        f"{decision.get('classification', '')}"
+    )
+
+    print(
+        f"Action         : "
+        f"{decision.get('action', '')}"
+    )
+
+    print(
+        f"Confidence     : "
+        f"{decision.get('confidence', '')}"
+    )
+
+    print(
+        f"Risk score     : "
+        f"{decision.get('risk_score', '')}/100"
+    )
+
+    print(
+        f"Risk level     : "
+        f"{decision.get('risk_level', '')}"
+    )
+
+    print(
+        "\nReason:"
+    )
+
+    print(
+        f"  {decision.get('reason', '')}"
+    )
+
+    # ----------------------------------------------------------
+    # FINAL SECURITY DECISION
+    # ----------------------------------------------------------
 
     print("\n" + "=" * 70)
     print(
@@ -318,27 +441,27 @@ def main() -> None:
 
     print(
         f"\nClassification : "
-        f"{decision.classification}"
+        f"{decision.get('classification', '')}"
     )
 
     print(
         f"Action         : "
-        f"{decision.action}"
+        f"{decision.get('action', '')}"
     )
 
     print(
         f"Confidence     : "
-        f"{decision.confidence}"
+        f"{decision.get('confidence', '')}"
     )
 
     print(
         f"Risk score     : "
-        f"{decision.risk_score}/100"
+        f"{decision.get('risk_score', '')}/100"
     )
 
     print(
         f"Risk level     : "
-        f"{decision.risk_level}"
+        f"{decision.get('risk_level', '')}"
     )
 
     print(
@@ -346,7 +469,7 @@ def main() -> None:
     )
 
     print(
-        f"  {decision.reason}"
+        f"  {decision.get('reason', '')}"
     )
 
     print("\n" + "=" * 70)

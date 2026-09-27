@@ -5,9 +5,13 @@ Decision Engine V3.1 Test Suite
 Purpose:
     Validate the V3.1 decision engine against controlled scenarios.
 
-Run from project root:
+Run directly:
 
     python -m src.security.test_decision_engine_v31
+
+Run with pytest:
+
+    pytest -q
 """
 
 from src.security.decision_engine_v31 import make_decision_v31
@@ -21,58 +25,43 @@ def run_test(
     expected_classification,
     expected_action,
 ):
-    try:
-        result = make_decision_v31(
-            ml_result=ml_result,
-            security_analysis=security_analysis,
-            risk_assessment=risk_assessment,
-        )
+    """Run one decision-engine scenario."""
 
-        actual_classification = result.get(
-            "classification",
-            ""
-        )
+    result = make_decision_v31(
+        ml_result=ml_result,
+        security_analysis=security_analysis,
+        risk_assessment=risk_assessment,
+    )
 
-        actual_action = result.get(
-            "action",
-            ""
-        )
+    actual_classification = result.get(
+        "classification",
+        "",
+    )
 
-        if (
-            actual_classification == expected_classification
-            and actual_action == expected_action
-        ):
-            print(f"[PASS] {name}")
-            return True
+    actual_action = result.get(
+        "action",
+        "",
+    )
 
-        print(f"[FAIL] {name}")
-        print(
-            f"       Expected classification: "
-            f"{expected_classification}"
-        )
-        print(
-            f"       Actual classification: "
-            f"{actual_classification}"
-        )
-        print(
-            f"       Expected action: "
-            f"{expected_action}"
-        )
-        print(
-            f"       Actual action: "
-            f"{actual_action}"
-        )
+    assert (
+        actual_classification == expected_classification
+    ), (
+        f"{name}: expected classification "
+        f"{expected_classification!r}, "
+        f"got {actual_classification!r}"
+    )
 
-        return False
-
-    except Exception as exc:
-        print(f"[FAIL] {name}")
-        print(f"       Error: {exc}")
-        return False
+    assert (
+        actual_action == expected_action
+    ), (
+        f"{name}: expected action "
+        f"{expected_action!r}, "
+        f"got {actual_action!r}"
+    )
 
 
 def test_clean_ham():
-    return run_test(
+    run_test(
         name="test_clean_ham",
         ml_result={
             "label": "ham",
@@ -100,7 +89,7 @@ def test_clean_ham():
 
 
 def test_clear_spam():
-    return run_test(
+    run_test(
         name="test_clear_spam",
         ml_result={
             "label": "spam",
@@ -128,7 +117,7 @@ def test_clear_spam():
 
 
 def test_strong_security_indicators():
-    return run_test(
+    run_test(
         name="test_strong_security_indicators",
         ml_result={
             "label": "ham",
@@ -156,7 +145,7 @@ def test_strong_security_indicators():
 
 
 def test_ham_with_moderate_risk():
-    return run_test(
+    run_test(
         name="test_ham_with_moderate_risk",
         ml_result={
             "label": "ham",
@@ -184,7 +173,7 @@ def test_ham_with_moderate_risk():
 
 
 def test_spam_with_weak_security_evidence():
-    return run_test(
+    run_test(
         name="test_spam_with_weak_security_evidence",
         ml_result={
             "label": "spam",
@@ -212,7 +201,7 @@ def test_spam_with_weak_security_evidence():
 
 
 def test_attachment_risk():
-    return run_test(
+    run_test(
         name="test_attachment_risk",
         ml_result={
             "label": "ham",
@@ -240,7 +229,7 @@ def test_attachment_risk():
 
 
 def test_html_script_email():
-    return run_test(
+    run_test(
         name="test_html_script_email",
         ml_result={
             "label": "ham",
@@ -268,28 +257,69 @@ def test_html_script_email():
 
 
 def main():
+    """Run the V3.1 scenarios directly."""
+
+    tests = [
+        (
+            "test_clean_ham",
+            test_clean_ham,
+        ),
+        (
+            "test_clear_spam",
+            test_clear_spam,
+        ),
+        (
+            "test_strong_security_indicators",
+            test_strong_security_indicators,
+        ),
+        (
+            "test_ham_with_moderate_risk",
+            test_ham_with_moderate_risk,
+        ),
+        (
+            "test_spam_with_weak_security_evidence",
+            test_spam_with_weak_security_evidence,
+        ),
+        (
+            "test_attachment_risk",
+            test_attachment_risk,
+        ),
+        (
+            "test_html_script_email",
+            test_html_script_email,
+        ),
+    ]
+
     print()
     print("=" * 70)
     print("EMAIL SECURITY AI — DECISION ENGINE V3.1 TESTS")
     print("=" * 70)
 
-    tests = [
-        test_clean_ham,
-        test_clear_spam,
-        test_strong_security_indicators,
-        test_ham_with_moderate_risk,
-        test_spam_with_weak_security_evidence,
-        test_attachment_risk,
-        test_html_script_email,
-    ]
-
     passed = 0
     failed = 0
 
-    for test in tests:
-        if test():
+    for name, test in tests:
+
+        try:
+            test()
+
+            print(f"[PASS] {name}")
             passed += 1
-        else:
+
+        except AssertionError as exc:
+
+            print(f"[FAIL] {name}")
+
+            if str(exc):
+                print(f"       {exc}")
+
+            failed += 1
+
+        except Exception as exc:
+
+            print(f"[FAIL] {name}")
+            print(f"       Error: {exc}")
+
             failed += 1
 
     print()
@@ -299,11 +329,13 @@ def main():
     print("=" * 70)
 
     if failed == 0:
+
         print()
         print(
             "Decision Engine V3.1 tests completed successfully."
         )
         print()
+
         return 0
 
     print()

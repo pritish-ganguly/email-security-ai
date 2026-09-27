@@ -1,51 +1,16 @@
-"""
-Train and evaluate supervised email-security models.
-
-Pipeline:
-
-    Raw dataset
-        ↓
-    Cleaning
-        ↓
-    Leakage-safe train / validation / test split
-        ↓
-    TF-IDF fitted on training data only
-        ↓
-    Transform train / validation / test
-        ↓
-    Train supervised models
-        ↓
-    Evaluate on validation data
-        ↓
-    Analyze decision thresholds
-
-The test dataset remains untouched for final evaluation.
-"""
-
-from src.data.spamassassin_loader import (
-    load_spamassassin,
-)
-
-from src.data.dataset_splitter import (
-    split_dataset,
-)
-
-from src.preprocessing.cleaner import (
-    clean_dataset,
-)
-
+from src.data.spamassassin_loader import load_spamassassin
+from src.data.dataset_splitter import split_dataset
+from src.preprocessing.cleaner import clean_dataset
 from src.features.text_features import (
     fit_text_pipeline,
     transform_text,
     print_text_feature_summary,
 )
-
 from src.models.supervised_baseline import (
     create_models,
     train_models,
 )
-
-from src.models.evaluation import (
+from src.evaluation.evaluation import (
     evaluate_model,
     analyze_thresholds,
     print_threshold_summary,
@@ -54,20 +19,15 @@ from src.models.evaluation import (
 
 
 def main():
-    """Run the supervised training and validation pipeline."""
-
-
     print("\nLoading SpamAssassin dataset...")
 
     dataframe = load_spamassassin()
-
 
     print("\nCleaning dataset...")
 
     dataframe, _ = clean_dataset(
         dataframe
     )
-
 
     print("\nCreating leakage-safe dataset split...")
 
@@ -79,31 +39,13 @@ def main():
     validation_data = split.validation
     test_data = split.test
 
+    x_train_text = train_data["email_text"]
+    x_validation_text = validation_data["email_text"]
+    x_test_text = test_data["email_text"]
 
-    x_train_text = train_data[
-        "email_text"
-    ]
-
-    x_validation_text = validation_data[
-        "email_text"
-    ]
-
-    x_test_text = test_data[
-        "email_text"
-    ]
-
-    y_train = train_data[
-        "label"
-    ]
-
-    y_validation = validation_data[
-        "label"
-    ]
-
-    y_test = test_data[
-        "label"
-    ]
-
+    y_train = train_data["label"]
+    y_validation = validation_data["label"]
+    y_test = test_data["label"]
 
     print(
         "\nFitting NLP feature pipeline "
@@ -114,42 +56,31 @@ def main():
         x_train_text
     )
 
-
-    print(
-        "\nTransforming training data..."
-    )
+    print("\nTransforming training data...")
 
     x_train = transform_text(
         text_pipeline,
         x_train_text,
     )
 
-
-    print(
-        "Transforming validation data..."
-    )
+    print("Transforming validation data...")
 
     x_validation = transform_text(
         text_pipeline,
         x_validation_text,
     )
 
-
-    print(
-        "Transforming test data..."
-    )
+    print("Transforming test data...")
 
     x_test = transform_text(
         text_pipeline,
         x_test_text,
     )
 
-
     print_text_feature_summary(
         text_pipeline,
         x_train,
     )
-
 
     print("\n" + "=" * 70)
     print("FEATURE MATRIX SHAPES")
@@ -167,24 +98,17 @@ def main():
         f"Test:       {x_test.shape}"
     )
 
-
-    print(
-        "\nCreating supervised models..."
-    )
+    print("\nCreating supervised models...")
 
     models = create_models()
 
-
-    print(
-        "\nTraining models..."
-    )
+    print("\nTraining models...")
 
     trained_models = train_models(
         models,
         x_train,
         y_train,
     )
-
 
     print("\n" + "=" * 70)
     print("VALIDATION EVALUATION")
@@ -193,7 +117,6 @@ def main():
     evaluation_results = []
 
     for name, model in trained_models.items():
-
         result = evaluate_model(
             model=model,
             name=name,
@@ -205,30 +128,24 @@ def main():
             result
         )
 
-
     compare_results(
         evaluation_results
     )
-
 
     print("\n" + "=" * 70)
     print("VALIDATION THRESHOLD ANALYSIS")
     print("=" * 70)
 
     for name, model in trained_models.items():
-
         print(
             f"\nAnalyzing: {name}"
         )
 
         try:
-
-            threshold_results = (
-                analyze_thresholds(
-                    model=model,
-                    features=x_validation,
-                    labels=y_validation,
-                )
+            threshold_results = analyze_thresholds(
+                model=model,
+                features=x_validation,
+                labels=y_validation,
             )
 
             print_threshold_summary(
@@ -236,12 +153,10 @@ def main():
             )
 
         except ValueError as error:
-
             print(
                 f"Threshold analysis skipped: "
                 f"{error}"
             )
-
 
     print("\n" + "=" * 70)
     print("TEST SET STATUS")
