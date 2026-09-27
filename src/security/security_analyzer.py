@@ -1,11 +1,3 @@
-"""
-Security analysis utilities for the Email Security AI project.
-
-This module extracts human-readable security indicators from an email.
-It does not make the final spam/ham classification. The trained ML model
-remains responsible for classification.
-"""
-
 import re
 from dataclasses import dataclass
 

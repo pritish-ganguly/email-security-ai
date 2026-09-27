@@ -46,6 +46,19 @@ data/processed/
 *.zip
 *.tar
 *.gz
+*.bz2
 
-# Generated reports
+# Generated reports / evaluation output
 reports/generated/
+evaluation/results/
+evaluation/reports/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Python tooling
+.mypy_cache/
+.ruff_cache/
+.pyright/

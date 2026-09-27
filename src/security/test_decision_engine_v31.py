@@ -1,19 +1,3 @@
-"""
-Email Security AI
-Decision Engine V3.1 Test Suite
-
-Purpose:
-    Validate the V3.1 decision engine against controlled scenarios.
-
-Run directly:
-
-    python -m src.security.test_decision_engine_v31
-
-Run with pytest:
-
-    pytest -q
-"""
-
 from src.security.decision_engine_v31 import make_decision_v31
 
 
