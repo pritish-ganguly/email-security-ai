@@ -1,4 +1,12 @@
-@'
+\## System Architecture
+
+
+
+!\[Email Security AI System Architecture](docs/images/architecture.png)
+
+
+
+
 
 \# Email Security AI
 
