@@ -1,15 +1,3 @@
-"""
-Save the frozen Email Security AI model artifacts.
-
-The model and threshold have already been selected using validation data.
-The test set must not be used anywhere in this artifact-generation step.
-
-Artifacts:
-    models/email_security_model.joblib
-    models/text_pipeline.joblib
-    models/model_metadata.json
-"""
-
 import json
 from pathlib import Path
 

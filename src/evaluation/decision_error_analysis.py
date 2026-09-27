@@ -1,32 +1,3 @@
-"""
-Decision Engine Error Analysis
-==============================
-
-Analyzes the behavior of the production decision engine
-without modifying:
-
-    - ML model
-    - NLP pipeline
-    - decision threshold
-    - training data
-    - production artifacts
-
-The analysis focuses on:
-
-    1. HAM emails escalated by the decision engine
-    2. SPAM emails allowed by the decision engine
-    3. ML vs final-decision disagreements
-    4. ML score vs risk-score conflicts
-    5. Security indicators responsible for escalation
-    6. Potential decision-engine overreach
-    7. Potential decision-engine underreaction
-
-This is diagnostic only.
-No retraining is performed.
-No model artifacts are modified.
-"""
-
-
 from pathlib import Path
 from collections import Counter
 
