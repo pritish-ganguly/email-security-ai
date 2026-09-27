@@ -1,0 +1,51 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.idea/
+.vscode/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Dataset files
+data/raw/
+data/interim/
+data/processed/
+
+# Generated datasets / exports
+*.csv
+*.xlsx
+*.xls
+
+# Archives
+*.zip
+*.tar
+*.gz
+
+# Generated reports
+reports/generated/
